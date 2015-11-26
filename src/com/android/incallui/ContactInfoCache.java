@@ -41,6 +41,9 @@ import com.google.common.collect.Sets;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
+import com.a1os.cloud.phone.PhoneUtil;
+import android.suda.utils.SudaUtils;
+
 import java.util.HashMap;
 import java.util.Set;
 
@@ -63,7 +66,7 @@ public class ContactInfoCache implements ContactsAsyncHelper.OnImageLoadComplete
         StructuredPostal.CITY
     };
 
-    private final Context mContext;
+    private static Context mContext;
     private final PhoneNumberService mPhoneNumberService;
     private final HashMap<String, ContactCacheEntry> mInfoMap = Maps.newHashMap();
     private final HashMap<String, Set<ContactInfoCacheCallback>> mCallBacks = Maps.newHashMap();
@@ -431,13 +434,13 @@ public class ContactInfoCache implements ContactsAsyncHelper.OnImageLoadComplete
 
                     // Display a geographical description string if available
                     // (but only for incoming calls.)
-                    if (isIncoming) {
+                    // if (isIncoming) {
                         // TODO (CallerInfoAsyncQuery cleanup): Fix the CallerInfo
                         // query to only do the geoDescription lookup in the first
                         // place for incoming calls.
                         displayLocation = info.geoDescription; // may be null
                         Log.d(TAG, "Geodescrption: " + info.geoDescription);
-                    }
+                    // }
 
                     Log.d(TAG, "  ==>  no name; falling back to number:"
                             + " displayNumber '" + Log.pii(displayNumber)
@@ -456,15 +459,26 @@ public class ContactInfoCache implements ContactsAsyncHelper.OnImageLoadComplete
                 } else {
                     displayName = info.name;
                     displayNumber = number;
+                    displayLocation = info.geoDescription;
                     label = info.phoneLabel;
                     Log.d(TAG, "  ==>  name is present in CallerInfo: displayName '" + displayName
-                            + "', displayNumber '" + displayNumber + "'");
+                            + "', displayNumber '" + displayNumber + "'" + "', displayLocation '" + displayLocation + "'");
                 }
             }
 
         cce.name = displayName;
         cce.number = displayNumber;
-        cce.location = displayLocation;
+        if (!isSipCall && !TextUtils.isEmpty(cce.number)) {
+            String location = PhoneUtil.getPhoneUtil(null).getLocalNumberInfo(cce.number, false);
+            if (!TextUtils.isEmpty(location)) {
+                info.geoDescription = location;
+                cce.location = info.geoDescription;
+            } else {
+               cce.location = displayLocation;
+            }
+        } else {
+            cce.location = displayLocation;
+        }
         cce.label = label;
         cce.isSipCall = isSipCall;
 

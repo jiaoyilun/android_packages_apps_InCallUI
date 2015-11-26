@@ -72,11 +72,17 @@ import com.android.phone.common.animation.AnimUtils;
 
 import java.util.List;
 
+import com.a1os.cloud.phone.PhoneUtil;
+import com.a1os.cloud.phone.PhoneUtil.CallBack;
+import android.suda.utils.SudaUtils;
+
 /**
  * Fragment for call card.
  */
 public class CallCardFragment extends BaseFragment<CallCardPresenter, CallCardPresenter.CallCardUi>
         implements CallCardPresenter.CallCardUi {
+
+    private static PhoneUtil mPu;
 
     private AnimatorSet mAnimatorSet;
     private int mRevealAnimationDuration;
@@ -214,6 +220,8 @@ public class CallCardFragment extends BaseFragment<CallCardPresenter, CallCardPr
         filter.addAction(RECORD_STATE_CHANGED);
 
         mInCallActivity = (InCallActivity)getActivity();
+
+        mPu = PhoneUtil.getPhoneUtil(getActivity());
     }
 
 
@@ -550,6 +558,16 @@ public class CallCardFragment extends BaseFragment<CallCardPresenter, CallCardPr
 
         // Set the label (Mobile, Work, etc)
         setPrimaryLabel(label);
+
+        if (SudaUtils.isSupportLanguage(true) && !TextUtils.isEmpty(number)
+                   && nameIsNumber) {
+            mPu.getOnlineNumberInfo(number, new CallBack() {
+                    public void execute(String response) {
+                         setPrimaryLabel(response);
+                     }
+                }
+            );
+        }
 
         showCallTypeLabel(isSipCall, isForwarded);
 

@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2013 The Android Open Source Project
+ * Copyright (C) 2015 The SudaMod Project 
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +23,8 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
+import android.suda.location.PhoneLocation;
+import android.suda.utils.SudaUtils;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -77,6 +80,9 @@ public class CallCardPresenter extends Presenter<CallCardPresenter.CallCardUi> i
     private ContactCacheEntry mSecondaryContactInfo;
     private CallTimer mCallTimer;
     private Context mContext;
+
+    private static boolean isSupportLanguage;
+
     private AudioManager mAudioManager;
 
     public static class ContactLookupCallback implements ContactInfoCacheCallback {
@@ -148,6 +154,8 @@ public class CallCardPresenter extends Presenter<CallCardPresenter.CallCardUi> i
         InCallPresenter.getInstance().addDetailsListener(this);
         InCallPresenter.getInstance().addInCallEventListener(this);
         AudioModeProvider.getInstance().addListener(this);
+
+        isSupportLanguage = SudaUtils.isSupportLanguage(true);
     }
 
     @Override
@@ -578,7 +586,9 @@ public class CallCardPresenter extends Presenter<CallCardPresenter.CallCardUi> i
                     checkIdpName,
                     nameIsNumber,
                     isForwarded,
-                    mPrimaryContactInfo.label,
+                    isSupportLanguage ? TextUtils.isEmpty(mPrimaryContactInfo.label) ? mPrimaryContactInfo.location :
+                        TextUtils.isEmpty(mPrimaryContactInfo.location) ? mPrimaryContactInfo.label : mPrimaryContactInfo.label + " "
+                            + mPrimaryContactInfo.location : mPrimaryContactInfo.label,
                     mPrimaryContactInfo.photo,
                     mPrimaryContactInfo.isSipCall,
                     mPrimaryContactInfo.nickName,
@@ -769,7 +779,11 @@ public class CallCardPresenter extends Presenter<CallCardPresenter.CallCardUi> i
         // If the name is empty, we use the number for the name...so dont show a second
         // number in the number field
         if (TextUtils.isEmpty(contactInfo.name)) {
-            return contactInfo.location;
+            if (!isSupportLanguage) {
+                return contactInfo.location;
+            } else {
+                return "";
+            }
         }
         return contactInfo.number;
     }
