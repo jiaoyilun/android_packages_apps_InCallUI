@@ -469,7 +469,7 @@ public class ContactInfoCache implements ContactsAsyncHelper.OnImageLoadComplete
         cce.name = displayName;
         cce.number = displayNumber;
         if (!isSipCall && !TextUtils.isEmpty(cce.number)) {
-            String location = PhoneUtil.getPhoneUtil(null).getLocalNumberInfo(cce.number, false);
+            String location = PhoneUtil.getPhoneUtil(mContext).getLocalNumberInfo(cce.number, false);
             if (!TextUtils.isEmpty(location)) {
                 info.geoDescription = location;
                 cce.location = info.geoDescription;
